@@ -86,7 +86,9 @@ pre{margin:0;background:var(--code-bg);color:var(--code-fg);padding:16px;border-
   </div>
 </div>
 <script>
-const SHOW_HINT = true; // set to false to remove the hint button and counter
+// Hints are off by default. Add ?show_hint=1 to the URL to turn them on.
+let SHOW_HINT = false;
+try { SHOW_HINT = new URLSearchParams(location.search).get("show_hint") === "1"; } catch (e) {}
 
 const LEVELS = [
   { label: "Examples", name: "pet", examples: true, data: {
