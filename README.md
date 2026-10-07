@@ -6,7 +6,7 @@ Live version: https://ttijs.github.io/data-objects-game/index.html
 
 ## Running it
 
-The whole project is one file, `object-bingo.html`. Open it in a browser. There is no build step and no dependencies. The page loads two fonts from Google Fonts and falls back to system fonts if they are unavailable.
+The whole project is one file, `index.html`. Open it in a browser. There is no build step and no dependencies. The page loads two fonts from Google Fonts and falls back to system fonts if they are unavailable.
 
 ## Levels
 
