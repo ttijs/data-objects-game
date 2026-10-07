@@ -1,271 +1,797 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Object Bingo</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;600;800&family=JetBrains+Mono:wght@400;600&display=swap">
-<style>
-:root{--bg:#e8e7f6;--card:#fff;--ink:#1d2160;--muted:#5b5f9a;--dauber:#e5338a;--code-bg:#1d2160;--code-fg:#e8e7f6;--line:#c9c8e8;--str:#ffb86b;--num:#7fe3c4;--bad:#d62839;
-box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#12142e;--card:#1c2050;--ink:#e8e7f6;--muted:#9a9ed6;--dauber:#ff5aa8;--code-bg:#0b0d22;--line:#343a80;--bad:#ff6b6b}}
-:root[data-theme="dark"]{--bg:#12142e;--card:#1c2050;--ink:#e8e7f6;--muted:#9a9ed6;--dauber:#ff5aa8;--code-bg:#0b0d22;--line:#343a80;--bad:#ff6b6b}
-html{scroll-padding-top:env(safe-area-inset-top,0px)}
-*{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--ink);font-family:'Bricolage Grotesque',system-ui,sans-serif;line-height:1.5}
-.wrap{max-width:1020px;margin:0 auto;padding:20px 16px 40px}
-header{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap;margin-bottom:18px}
-h1{font-size:clamp(28px,5vw,44px);font-weight:800;margin:0;letter-spacing:-.02em;line-height:1}
-.sub{color:var(--muted);margin:6px 0 0;max-width:46ch}
-.stats{display:flex;gap:18px;font-weight:600}
-.stats span b{font-size:22px;display:block;line-height:1}
-.stats small{color:var(--muted);font-weight:400}
-.layout{display:grid;grid-template-columns:minmax(260px,340px) 1fr;gap:20px;align-items:start}
-@media (max-width:760px){.layout{grid-template-columns:1fr}}
-pre{margin:0;background:var(--code-bg);color:var(--code-fg);padding:16px;border-radius:14px;font:13px/1.55 'JetBrains Mono',ui-monospace,monospace;overflow-x:auto}
-.s{color:var(--str)}.n{color:var(--num)}
-.side{position:sticky;top:calc(env(safe-area-inset-top,0px) + 12px)}
-@media (max-width:760px){.side{position:static}}
-.call{display:flex;align-items:center;gap:16px;margin-bottom:16px}
-.ball{flex:none;width:180px;height:120px;border-radius:50%;background:var(--card);border:6px solid var(--dauber);display:grid;place-items:center;font:600 20px 'JetBrains Mono',monospace;text-align:center;overflow:hidden;padding:4px}
-.ball.pop{animation:pop .35s}
-@keyframes pop{0%{transform:scale(.6) rotate(-12deg)}70%{transform:scale(1.08)}100%{transform:none}}
-.callText{font-weight:600}.callText small{display:block;color:var(--muted);font-weight:400}
-.board{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
-.cell{position:relative;min-height:74px;padding:8px 6px;border:2px solid var(--line);border-radius:12px;background:var(--card);color:var(--ink);font:600 12px/1.3 'JetBrains Mono',monospace;cursor:pointer;word-break:keep-all;display:grid;place-items:center;text-align:center}
-.cell:hover:not(:disabled){border-color:var(--ink)}
-.cell:focus-visible,button.btn:focus-visible{outline:3px solid var(--dauber);outline-offset:2px}
-.cell.on{border-color:var(--dauber);cursor:default}
-.cell.on::after{content:"";position:absolute;inset:8px;border-radius:50%;background:var(--dauber);opacity:.55;animation:stamp .25s}
-@keyframes stamp{from{transform:scale(1.6);opacity:0}to{transform:none;opacity:.55}}
-.cell.win{background:var(--dauber);color:#fff}
-.cell.shake{animation:shake .35s;border-color:var(--bad)}
-@keyframes shake{25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
-.msg{min-height:48px;margin:14px 0 0;font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--muted)}
-.msg.bad{color:var(--bad)}.msg.good{color:var(--ink)}
-.btn{margin-top:10px;font:600 15px 'Bricolage Grotesque',sans-serif;background:var(--dauber);color:#fff;border:0;border-radius:10px;padding:10px 18px;cursor:pointer}
-.levels{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}.lv{font:600 14px 'Bricolage Grotesque',sans-serif;background:var(--card);color:var(--ink);border:2px solid var(--line);border-radius:999px;padding:6px 14px;cursor:pointer}.lv[aria-pressed="true"]{border-color:var(--dauber);background:var(--dauber);color:#fff}.lv:focus-visible{outline:3px solid var(--dauber);outline-offset:2px}
-.btn.hint{background:var(--card);color:var(--ink);border:2px solid var(--dauber);margin-right:8px}
-.cell.hint{outline:3px dashed var(--dauber);outline-offset:2px}
-.study .call,.study .board,.study .msg,.study #hint,.study #again,.study .stats,.study main > .how{display:none}
-.ex{background:var(--card);border:2px solid var(--line);border-radius:12px;padding:12px 14px;margin-top:10px;display:grid;grid-template-columns:1fr auto;gap:4px 12px;align-items:center}
-.ex code{font:600 14px 'JetBrains Mono',monospace;word-break:break-word}
-.ex .res{font:600 14px 'JetBrains Mono',monospace;background:var(--dauber);color:#fff;border-radius:999px;padding:2px 12px}
-.ex p{grid-column:1/-1;margin:0;color:var(--muted);font-size:14px}
-.how{color:var(--muted);font-size:14px;margin:14px 0 0}
-@media (prefers-reduced-motion:reduce){*{animation:none!important}}
-</style>
-</head>
-<body>
-<div class="wrap">
-  <header>
-    <div>
-      <h1>Object Bingo</h1>
-      <p class="sub">Each square is an expression on the object shown. Click the one that returns the value being called.</p>
-      <div class="levels" id="levels"></div>
-    </div>
-    <div class="stats">
-      <span><b id="left">16</b><small>calls left</small></span>
-      <span><b id="strikes">0</b><small>misses</small></span>
-      <span id="hintStat"><b id="hints">0</b><small>hints</small></span>
-    </div>
-  </header>
-  <div class="layout">
-    <div class="side"><pre id="code" aria-label="The game object"></pre></div>
-    <main>
-      <div id="examples" hidden></div>
-      <div class="call">
-        <div class="ball" id="ball" aria-hidden="true"></div>
-        <div class="callText">Find the square that returns this value<small>Strings keep their quotes, so "7" is not 7.</small></div>
-      </div>
-      <div class="board" id="board"></div>
-      <p class="msg" id="msg" role="status" aria-live="polite"></p>
-      <button class="btn hint" id="hint" type="button">Hint</button><button class="btn" id="again" hidden>Play again</button>
-      <p class="how">Complete any row, column, or diagonal to win. Wrong picks count as misses.</p>
-    </main>
-  </div>
-</div>
-<script>
-// Hints are off by default. Add ?show_hint=1 to the URL to turn them on.
-let SHOW_HINT = false;
-try { SHOW_HINT = new URLSearchParams(location.search).get("show_hint") === "1"; } catch (e) {}
+    <head>
+        <meta charset="utf-8" />
+        <meta
+            name="viewport"
+            content="width=device-width, initial-scale=1, viewport-fit=cover"
+        />
+        <title>Object Bingo</title>
+        <link
+            rel="stylesheet"
+            href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;600;800&family=JetBrains+Mono:wght@400;600&display=swap"
+        />
+        <style>
+            :root {
+                --bg: #e8e7f6;
+                --card: #fff;
+                --ink: #1d2160;
+                --muted: #5b5f9a;
+                --dauber: #e5338a;
+                --code-bg: #1d2160;
+                --code-fg: #e8e7f6;
+                --line: #c9c8e8;
+                --str: #ffb86b;
+                --num: #7fe3c4;
+                --bad: #d62839;
+                box-sizing: border-box;
+                padding-top: env(safe-area-inset-top, 0px);
+                padding-bottom: env(safe-area-inset-bottom, 0px);
+            }
+            @media (prefers-color-scheme: dark) {
+                :root:not([data-theme="light"]) {
+                    --bg: #12142e;
+                    --card: #1c2050;
+                    --ink: #e8e7f6;
+                    --muted: #9a9ed6;
+                    --dauber: #ff5aa8;
+                    --code-bg: #0b0d22;
+                    --line: #343a80;
+                    --bad: #ff6b6b;
+                }
+            }
+            :root[data-theme="dark"] {
+                --bg: #12142e;
+                --card: #1c2050;
+                --ink: #e8e7f6;
+                --muted: #9a9ed6;
+                --dauber: #ff5aa8;
+                --code-bg: #0b0d22;
+                --line: #343a80;
+                --bad: #ff6b6b;
+            }
+            html {
+                scroll-padding-top: env(safe-area-inset-top, 0px);
+            }
+            * {
+                box-sizing: border-box;
+            }
+            body {
+                margin: 0;
+                background: var(--bg);
+                color: var(--ink);
+                font-family: "Bricolage Grotesque", system-ui, sans-serif;
+                line-height: 1.5;
+            }
+            .wrap {
+                max-width: 1020px;
+                margin: 0 auto;
+                padding: 20px 16px 40px;
+            }
+            header {
+                display: flex;
+                justify-content: space-between;
+                align-items: flex-end;
+                gap: 12px;
+                flex-wrap: wrap;
+                margin-bottom: 18px;
+            }
+            h1 {
+                font-size: clamp(28px, 5vw, 44px);
+                font-weight: 800;
+                margin: 0;
+                letter-spacing: -0.02em;
+                line-height: 1;
+            }
+            .sub {
+                color: var(--muted);
+                margin: 6px 0 0;
+                max-width: 46ch;
+            }
+            .stats {
+                display: flex;
+                gap: 18px;
+                font-weight: 600;
+            }
+            .stats span b {
+                font-size: 22px;
+                display: block;
+                line-height: 1;
+            }
+            .stats small {
+                color: var(--muted);
+                font-weight: 400;
+            }
+            .layout {
+                display: grid;
+                grid-template-columns: minmax(260px, 340px) 1fr;
+                gap: 20px;
+                align-items: start;
+            }
+            @media (max-width: 760px) {
+                .layout {
+                    grid-template-columns: 1fr;
+                }
+            }
+            pre {
+                margin: 0;
+                background: var(--code-bg);
+                color: var(--code-fg);
+                padding: 16px;
+                border-radius: 14px;
+                font:
+                    13px/1.55 "JetBrains Mono",
+                    ui-monospace,
+                    monospace;
+                overflow-x: auto;
+            }
+            .s {
+                color: var(--str);
+            }
+            .n {
+                color: var(--num);
+            }
+            .side {
+                position: sticky;
+                top: calc(env(safe-area-inset-top, 0px) + 12px);
+            }
+            @media (max-width: 760px) {
+                .side {
+                    position: static;
+                }
+            }
+            .call {
+                display: flex;
+                align-items: center;
+                gap: 16px;
+                margin-bottom: 16px;
+            }
+            .ball {
+                flex: none;
+                width: 180px;
+                height: 120px;
+                border-radius: 50%;
+                background: var(--card);
+                border: 6px solid var(--dauber);
+                display: grid;
+                place-items: center;
+                font:
+                    600 20px "JetBrains Mono",
+                    monospace;
+                text-align: center;
+                overflow: hidden;
+                padding: 4px;
+            }
+            .ball.pop {
+                animation: pop 0.35s;
+            }
+            @keyframes pop {
+                0% {
+                    transform: scale(0.6) rotate(-12deg);
+                }
+                70% {
+                    transform: scale(1.08);
+                }
+                100% {
+                    transform: none;
+                }
+            }
+            .callText {
+                font-weight: 600;
+            }
+            .callText small {
+                display: block;
+                color: var(--muted);
+                font-weight: 400;
+            }
+            .board {
+                display: grid;
+                grid-template-columns: repeat(4, 1fr);
+                gap: 8px;
+            }
+            .cell {
+                position: relative;
+                min-height: 74px;
+                padding: 8px 6px;
+                border: 2px solid var(--line);
+                border-radius: 12px;
+                background: var(--card);
+                color: var(--ink);
+                font:
+                    600 12px/1.3 "JetBrains Mono",
+                    monospace;
+                cursor: pointer;
+                word-break: keep-all;
+                display: grid;
+                place-items: center;
+                text-align: center;
+            }
+            .cell:hover:not(:disabled) {
+                border-color: var(--ink);
+            }
+            .cell:focus-visible,
+            button.btn:focus-visible {
+                outline: 3px solid var(--dauber);
+                outline-offset: 2px;
+            }
+            .cell.on {
+                border-color: var(--dauber);
+                cursor: default;
+            }
+            .cell.on::after {
+                content: "";
+                position: absolute;
+                inset: 8px;
+                border-radius: 50%;
+                background: var(--dauber);
+                opacity: 0.55;
+                animation: stamp 0.25s;
+            }
+            @keyframes stamp {
+                from {
+                    transform: scale(1.6);
+                    opacity: 0;
+                }
+                to {
+                    transform: none;
+                    opacity: 0.55;
+                }
+            }
+            .cell.win {
+                background: var(--dauber);
+                color: #fff;
+            }
+            .cell.shake {
+                animation: shake 0.35s;
+                border-color: var(--bad);
+            }
+            @keyframes shake {
+                25% {
+                    transform: translateX(-5px);
+                }
+                75% {
+                    transform: translateX(5px);
+                }
+            }
+            .msg {
+                min-height: 48px;
+                margin: 14px 0 0;
+                font-family: "JetBrains Mono", monospace;
+                font-size: 13px;
+                color: var(--muted);
+            }
+            .msg.bad {
+                color: var(--bad);
+            }
+            .msg.good {
+                color: var(--ink);
+            }
+            .btn {
+                margin-top: 10px;
+                font:
+                    600 15px "Bricolage Grotesque",
+                    sans-serif;
+                background: var(--dauber);
+                color: #fff;
+                border: 0;
+                border-radius: 10px;
+                padding: 10px 18px;
+                cursor: pointer;
+            }
+            .levels {
+                display: flex;
+                gap: 8px;
+                margin-top: 12px;
+                flex-wrap: wrap;
+            }
+            .lv {
+                font:
+                    600 14px "Bricolage Grotesque",
+                    sans-serif;
+                background: var(--card);
+                color: var(--ink);
+                border: 2px solid var(--line);
+                border-radius: 999px;
+                padding: 6px 14px;
+                cursor: pointer;
+            }
+            .lv[aria-pressed="true"] {
+                border-color: var(--dauber);
+                background: var(--dauber);
+                color: #fff;
+            }
+            .lv:focus-visible {
+                outline: 3px solid var(--dauber);
+                outline-offset: 2px;
+            }
+            .btn.hint {
+                background: var(--card);
+                color: var(--ink);
+                border: 2px solid var(--dauber);
+                margin-right: 8px;
+            }
+            .cell.hint {
+                outline: 3px dashed var(--dauber);
+                outline-offset: 2px;
+            }
+            .study .call,
+            .study .board,
+            .study .msg,
+            .study #hint,
+            .study #again,
+            .study .stats,
+            .study main > .how {
+                display: none;
+            }
+            .ex {
+                background: var(--card);
+                border: 2px solid var(--line);
+                border-radius: 12px;
+                padding: 12px 14px;
+                margin-top: 10px;
+                display: grid;
+                grid-template-columns: 1fr auto;
+                gap: 4px 12px;
+                align-items: center;
+            }
+            .ex code {
+                font:
+                    600 14px "JetBrains Mono",
+                    monospace;
+                word-break: break-word;
+            }
+            .ex .res {
+                font:
+                    600 14px "JetBrains Mono",
+                    monospace;
+                background: var(--dauber);
+                color: #fff;
+                border-radius: 999px;
+                padding: 2px 12px;
+            }
+            .ex p {
+                grid-column: 1/-1;
+                margin: 0;
+                color: var(--muted);
+                font-size: 14px;
+            }
+            .how {
+                color: var(--muted);
+                font-size: 14px;
+                margin: 14px 0 0;
+            }
+            @media (prefers-reduced-motion: reduce) {
+                * {
+                    animation: none !important;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <div class="wrap">
+            <header>
+                <div>
+                    <h1>Object Bingo</h1>
+                    <p class="sub">
+                        Each square is an expression on the object shown. Click
+                        the one that returns the value being called.
+                    </p>
+                    <div class="levels" id="levels"></div>
+                </div>
+                <div class="stats">
+                    <span><b id="left">16</b><small>calls left</small></span>
+                    <span><b id="strikes">0</b><small>misses</small></span>
+                    <span id="hintStat"
+                        ><b id="hints">0</b><small>hints</small></span
+                    >
+                </div>
+            </header>
+            <div class="layout">
+                <div class="side">
+                    <pre id="code" aria-label="The game object"></pre>
+                </div>
+                <main>
+                    <div id="examples" hidden></div>
+                    <div class="call">
+                        <div class="ball" id="ball" aria-hidden="true"></div>
+                        <div class="callText">
+                            Find the square that returns this value<small
+                                >Strings keep their quotes, so "7" is not
+                                7.</small
+                            >
+                        </div>
+                    </div>
+                    <div class="board" id="board"></div>
+                    <p
+                        class="msg"
+                        id="msg"
+                        role="status"
+                        aria-live="polite"
+                    ></p>
+                    <button class="btn hint" id="hint" type="button">
+                        Hint</button
+                    ><button class="btn" id="again" hidden>Play again</button>
+                    <p class="how">
+                        Complete any row, column, or diagonal to win. Wrong
+                        picks count as misses.
+                    </p>
+                </main>
+            </div>
+        </div>
+        <script>
+            // Hints are off by default. Add ?show_hint=1 to the URL to turn them on.
+            let SHOW_HINT = false;
+            try {
+                SHOW_HINT =
+                    new URLSearchParams(location.search).get("show_hint") ===
+                    "1";
+            } catch (e) {}
 
-const LEVELS = [
-  { label: "Examples", name: "pet", examples: true, data: {
-      name: "Biscuit",
-      age: 3,
-      toys: ["ball", "rope"],
-      owner: { name: "Sam", city: "Oslo" }
-    }, cells: [
-      ["pet.name", g => g.name, "Dot notation reads a property by its name."],
-      ['pet["age"]', g => g["age"], "Bracket notation does the same. It is handy when the key is stored in a string or variable."],
-      ["pet.toys[1]", g => g.toys[1], "Arrays count from zero, so [0] is the first item and [1] is the second."],
-      ["pet.owner.name", g => g.owner.name, "Chain dots to reach into a nested object."],
-      ["Object.keys(pet)", g => Object.keys(g), "Returns an array of the object's own property names."]
-  ]},
-  { label: "Level 1: game", name: "game", data: {
-      player: { name: "Mira", level: 7, tags: ["rogue", "archer"] },
-      inventory: [
-        { item: "sword", qty: 1, stats: { atk: 12 } },
-        { item: "potion", qty: 5, stats: { heal: 30 } },
-        { item: "rope", qty: 2, stats: {} }
-      ],
-      settings: { sound: true, difficulty: "hard", keys: { jump: "Space", fire: "F" } },
-      scores: [40, 85, 120]
-    }, cells: [
-      ["game.player.name", g => g.player.name],
-      ["game.player.level", g => g.player.level],
-      ["game.player.tags[1]", g => g.player.tags[1]],
-      ["game.player.tags.length", g => g.player.tags.length],
-      ["game.inventory[0].item", g => g.inventory[0].item],
-      ["game.inventory[1].qty", g => g.inventory[1].qty],
-      ["game.inventory[0].stats.atk", g => g.inventory[0].stats.atk],
-      ['game.inventory[1].stats["heal"]', g => g.inventory[1].stats["heal"]],
-      ["game.inventory.length", g => g.inventory.length],
-      ["game.settings.difficulty", g => g.settings.difficulty],
-      ["game.settings.keys.jump", g => g.settings.keys.jump],
-      ["game.settings.keys.fire", g => g.settings.keys.fire],
-      ["game.scores[2]", g => g.scores[2]],
-      ["game.scores[0] + game.scores[1]", g => g.scores[0] + g.scores[1]],
-      ["game.settings.sound", g => g.settings.sound],
-      ["game.inventory[2].item.toUpperCase()", g => g.inventory[2].item.toUpperCase()]
-  ]},
-  { label: "Level 2: cafe", name: "cafe", data: {
-      name: "Bean There",
-      open: { weekdays: "7am", weekend: "9am" },
-      menu: { latte: 4.5, mocha: 5.5, tea: 3, scone: 3.5 },
-      staff: { ana: { role: "barista", shifts: 6 }, ben: { role: "baker", shifts: 2 } },
-      tags: ["quiet", "wifi", "dogs"]
-    }, cells: [
-      ["cafe.name", g => g.name],
-      ["cafe.open.weekend", g => g.open.weekend],
-      ["Object.keys(cafe.menu)[0]", g => Object.keys(g.menu)[0]],
-      ["Object.keys(cafe.menu).length", g => Object.keys(g.menu).length],
-      ["Object.keys(cafe).length", g => Object.keys(g).length],
-      ['Object.keys(cafe.staff).join(", ")', g => Object.keys(g.staff).join(", ")],
-      ["Object.values(cafe.menu)[1]", g => Object.values(g.menu)[1]],
-      ["Object.values(cafe.menu)[2]", g => Object.values(g.menu)[2]],
-      ["Object.values(cafe.open)[0]", g => Object.values(g.open)[0]],
-      ["Object.values(cafe.staff)[1].role", g => Object.values(g.staff)[1].role],
-      ['cafe.hasOwnProperty("wifi")', g => g.hasOwnProperty("wifi")],
-      ["cafe.staff.ana.role", g => g.staff.ana.role],
-      ["cafe.staff.ana.shifts", g => g.staff.ana.shifts],
-      ['cafe.staff["ben"].shifts', g => g.staff["ben"].shifts],
-      ["cafe.tags[2]", g => g.tags[2]],
-      ['cafe.tags.includes("wifi")', g => g.tags.includes("wifi")]
-  ]}
-];
+            const LEVELS = [
+                {
+                    label: "Examples",
+                    name: "pet",
+                    examples: true,
+                    data: {
+                        name: "Biscuit",
+                        age: 3,
+                        toys: ["ball", "rope"],
+                        owner: { name: "Sam", city: "Oslo" },
+                    },
+                    cells: [
+                        [
+                            "pet.name",
+                            (g) => g.name,
+                            "Dot notation reads a property by its name.",
+                        ],
+                        [
+                            'pet["age"]',
+                            (g) => g["age"],
+                            "Bracket notation does the same. It is handy when the key is stored in a string or variable.",
+                        ],
+                        [
+                            "pet.toys[1]",
+                            (g) => g.toys[1],
+                            "Arrays count from zero, so [0] is the first item and [1] is the second.",
+                        ],
+                        [
+                            "pet.owner.name",
+                            (g) => g.owner.name,
+                            "Chain dots to reach into a nested object.",
+                        ],
+                        [
+                            "Object.keys(pet)",
+                            (g) => Object.keys(g),
+                            "Returns an array of the object's own property names.",
+                        ],
+                    ],
+                },
+                {
+                    label: "Level 1: game",
+                    name: "game",
+                    data: {
+                        player: {
+                            name: "Mira",
+                            level: 7,
+                            tags: ["rogue", "archer"],
+                        },
+                        inventory: [
+                            { item: "sword", qty: 1, stats: { atk: 12 } },
+                            { item: "potion", qty: 5, stats: { heal: 30 } },
+                            { item: "rope", qty: 2, stats: {} },
+                        ],
+                        settings: {
+                            sound: true,
+                            difficulty: "hard",
+                            keys: { jump: "Space", fire: "F" },
+                        },
+                        scores: [40, 85, 120],
+                    },
+                    cells: [
+                        ["game.player.name", (g) => g.player.name],
+                        ["game.player.level", (g) => g.player.level],
+                        ["game.player.tags[1]", (g) => g.player.tags[1]],
+                        [
+                            "game.player.tags.length",
+                            (g) => g.player.tags.length,
+                        ],
+                        ["game.inventory[0].item", (g) => g.inventory[0].item],
+                        ["game.inventory[1].qty", (g) => g.inventory[1].qty],
+                        [
+                            "game.inventory[0].stats.atk",
+                            (g) => g.inventory[0].stats.atk,
+                        ],
+                        [
+                            'game.inventory[1].stats["heal"]',
+                            (g) => g.inventory[1].stats["heal"],
+                        ],
+                        ["game.inventory.length", (g) => g.inventory.length],
+                        [
+                            "game.settings.difficulty",
+                            (g) => g.settings.difficulty,
+                        ],
+                        [
+                            "game.settings.keys.jump",
+                            (g) => g.settings.keys.jump,
+                        ],
+                        [
+                            "game.settings.keys.fire",
+                            (g) => g.settings.keys.fire,
+                        ],
+                        ["game.scores[2]", (g) => g.scores[2]],
+                        [
+                            "game.scores[0] + game.scores[1]",
+                            (g) => g.scores[0] + g.scores[1],
+                        ],
+                        ["game.settings.sound", (g) => g.settings.sound],
+                        [
+                            "game.inventory[2].item.toUpperCase()",
+                            (g) => g.inventory[2].item.toUpperCase(),
+                        ],
+                    ],
+                },
+                {
+                    label: "Level 2: cafe",
+                    name: "cafe",
+                    data: {
+                        name: "Bean There",
+                        open: { weekdays: "7am", weekend: "9am" },
+                        menu: { latte: 4.5, mocha: 5.5, tea: 3, scone: 3.5 },
+                        staff: {
+                            ana: { role: "barista", shifts: 6 },
+                            ben: { role: "baker", shifts: 2 },
+                        },
+                        tags: ["quiet", "wifi", "dogs"],
+                    },
+                    cells: [
+                        ["cafe.name", (g) => g.name],
+                        ["cafe.open.weekend", (g) => g.open.weekend],
+                        [
+                            "Object.keys(cafe.menu)[0]",
+                            (g) => Object.keys(g.menu)[0],
+                        ],
+                        [
+                            "Object.keys(cafe.menu).length",
+                            (g) => Object.keys(g.menu).length,
+                        ],
+                        [
+                            "Object.keys(cafe).length",
+                            (g) => Object.keys(g).length,
+                        ],
+                        [
+                            'Object.keys(cafe.staff).join(", ")',
+                            (g) => Object.keys(g.staff).join(", "),
+                        ],
+                        [
+                            "Object.values(cafe.menu)[1]",
+                            (g) => Object.values(g.menu)[1],
+                        ],
+                        [
+                            "Object.values(cafe.menu)[2]",
+                            (g) => Object.values(g.menu)[2],
+                        ],
+                        [
+                            "Object.values(cafe.open)[0]",
+                            (g) => Object.values(g.open)[0],
+                        ],
+                        [
+                            "Object.values(cafe.staff)[1].role",
+                            (g) => Object.values(g.staff)[1].role,
+                        ],
+                        [
+                            'cafe.hasOwnProperty("wifi")',
+                            (g) => g.hasOwnProperty("wifi"),
+                        ],
+                        ["cafe.staff.ana.role", (g) => g.staff.ana.role],
+                        ["cafe.staff.ana.shifts", (g) => g.staff.ana.shifts],
+                        [
+                            'cafe.staff["ben"].shifts',
+                            (g) => g.staff["ben"].shifts,
+                        ],
+                        ["cafe.tags[2]", (g) => g.tags[2]],
+                        [
+                            'cafe.tags.includes("wifi")',
+                            (g) => g.tags.includes("wifi"),
+                        ],
+                    ],
+                },
+            ];
 
-const LINES = [];
-for (let i = 0; i < 4; i++) {
-  LINES.push([0,1,2,3].map(c => i * 4 + c), [0,1,2,3].map(r => r * 4 + i));
-}
-LINES.push([0,5,10,15], [3,6,9,12]);
+            const LINES = [];
+            for (let i = 0; i < 4; i++) {
+                LINES.push(
+                    [0, 1, 2, 3].map((c) => i * 4 + c),
+                    [0, 1, 2, 3].map((r) => r * 4 + i),
+                );
+            }
+            LINES.push([0, 5, 10, 15], [3, 6, 9, 12]);
 
-const fmt = v => (typeof v === "string" || Array.isArray(v)) ? JSON.stringify(v) : String(v);
-const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
-const $ = id => document.getElementById(id);
-const esc = s => s.replace(/&/g, "&amp;").replace(/</g, "&lt;");
+            const fmt = (v) =>
+                typeof v === "string" || Array.isArray(v)
+                    ? JSON.stringify(v)
+                    : String(v);
+            const shuffle = (a) => {
+                a = a.slice();
+                for (let i = a.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [a[i], a[j]] = [a[j], a[i]];
+                }
+                return a;
+            };
+            const $ = (id) => document.getElementById(id);
+            const esc = (s) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;");
 
-let CELLS, level = 0, order, calls, step, marked, strikes, over, hints, hintedStep;
+            let CELLS,
+                level = 0,
+                order,
+                calls,
+                step,
+                marked,
+                strikes,
+                over,
+                hints,
+                hintedStep;
 
-LEVELS.forEach((L, i) => {
-  const b = document.createElement("button");
-  b.type = "button"; b.className = "lv"; b.textContent = L.label;
-  b.addEventListener("click", () => load(i));
-  $("levels").appendChild(b);
-});
+            LEVELS.forEach((L, i) => {
+                const b = document.createElement("button");
+                b.type = "button";
+                b.className = "lv";
+                b.textContent = L.label;
+                b.addEventListener("click", () => load(i));
+                $("levels").appendChild(b);
+            });
 
-function load(n) {
-  level = n;
-  const L = LEVELS[n];
-  CELLS = L.cells.map(([src, fn], id) => ({ id, src, value: fn(L.data) }));
-  $("code").innerHTML = `const ${L.name} = ` + esc(JSON.stringify(L.data, null, 2))
-    .replace(/^(\s*)"(\w+)":/gm, '$1$2:')
-    .replace(/"([^"]*)"/g, '<span class="s">"$1"</span>')
-    .replace(/(: |\[|, )(\d+\.?\d*)/g, '$1<span class="n">$2</span>')
-    .replace(/^(\s+)(\d+)(,?)$/gm, '$1<span class="n">$2</span>$3') + ";";
-  document.querySelectorAll(".lv").forEach((b, i) => b.setAttribute("aria-pressed", i === n));
-  document.body.classList.toggle("study", !!L.examples);
-  $("examples").hidden = !L.examples;
-  if (L.examples) {
-    $("examples").innerHTML = '<p class="how">Read each expression, then check what it returns. When you are ready, try the bingo levels.</p>' +
-      L.cells.map(([src, fn, note], i) => {
-        const v = fn(L.data);
-        return `<div class="ex"><code>${esc(src)}</code><span class="res">${esc(fmt(v))}</span><p>${esc(note)}</p></div>`;
-      }).join("");
-    return;
-  }
-  start();
-}
+            function load(n) {
+                level = n;
+                const L = LEVELS[n];
+                CELLS = L.cells.map(([src, fn], id) => ({
+                    id,
+                    src,
+                    value: fn(L.data),
+                }));
+                $("code").innerHTML =
+                    `const ${L.name} = ` +
+                    esc(JSON.stringify(L.data, null, 2))
+                        .replace(/^(\s*)"(\w+)":/gm, "$1$2:")
+                        .replace(/"([^"]*)"/g, '<span class="s">"$1"</span>')
+                        .replace(
+                            /(: |\[|, )(\d+\.?\d*)/g,
+                            '$1<span class="n">$2</span>',
+                        )
+                        .replace(
+                            /^(\s+)(\d+)(,?)$/gm,
+                            '$1<span class="n">$2</span>$3',
+                        ) +
+                    ";";
+                document
+                    .querySelectorAll(".lv")
+                    .forEach((b, i) => b.setAttribute("aria-pressed", i === n));
+                document.body.classList.toggle("study", !!L.examples);
+                $("examples").hidden = !L.examples;
+                if (L.examples) {
+                    $("examples").innerHTML =
+                        '<p class="how">Read each expression, then check what it returns. When you are ready, try the bingo levels.</p>' +
+                        L.cells
+                            .map(([src, fn, note], i) => {
+                                const v = fn(L.data);
+                                return `<div class="ex"><code>${esc(src)}</code><span class="res">${esc(fmt(v))}</span><p>${esc(note)}</p></div>`;
+                            })
+                            .join("");
+                    return;
+                }
+                start();
+            }
 
-function start() {
-  order = shuffle(CELLS.map(c => c.id));
-  calls = shuffle(CELLS.map(c => c.id));
-  step = 0; marked = new Set(); strikes = 0; over = false; hints = 0; hintedStep = -1;
-  $("board").innerHTML = "";
-  order.forEach(id => {
-    const b = document.createElement("button");
-    b.className = "cell"; b.type = "button";
-    b.textContent = CELLS[id].src;
-    b.addEventListener("click", () => pick(id, b));
-    $("board").appendChild(b);
-  });
-  $("again").hidden = true;
-  $("hint").hidden = !SHOW_HINT;
-  say("", "");
-  show();
-}
+            function start() {
+                order = shuffle(CELLS.map((c) => c.id));
+                calls = shuffle(CELLS.map((c) => c.id));
+                step = 0;
+                marked = new Set();
+                strikes = 0;
+                over = false;
+                hints = 0;
+                hintedStep = -1;
+                $("board").innerHTML = "";
+                order.forEach((id) => {
+                    const b = document.createElement("button");
+                    b.className = "cell";
+                    b.type = "button";
+                    b.textContent = CELLS[id].src;
+                    b.addEventListener("click", () => pick(id, b));
+                    $("board").appendChild(b);
+                });
+                $("again").hidden = true;
+                $("hint").hidden = !SHOW_HINT;
+                say("", "");
+                show();
+            }
 
-function show() {
-  $("strikes").textContent = strikes;
-  $("hints").textContent = hints;
-  document.querySelectorAll(".cell.hint").forEach(c => c.classList.remove("hint"));
-  $("left").textContent = calls.length - step;
-  const ball = $("ball");
-  ball.textContent = over ? "" : fmt(CELLS[calls[step]].value);
-  ball.classList.remove("pop"); void ball.offsetWidth; ball.classList.add("pop");
-}
+            function show() {
+                $("strikes").textContent = strikes;
+                $("hints").textContent = hints;
+                document
+                    .querySelectorAll(".cell.hint")
+                    .forEach((c) => c.classList.remove("hint"));
+                $("left").textContent = calls.length - step;
+                const ball = $("ball");
+                ball.textContent = over ? "" : fmt(CELLS[calls[step]].value);
+                ball.classList.remove("pop");
+                void ball.offsetWidth;
+                ball.classList.add("pop");
+            }
 
-function say(text, cls) { const m = $("msg"); m.textContent = text; m.className = "msg " + cls; }
+            function say(text, cls) {
+                const m = $("msg");
+                m.textContent = text;
+                m.className = "msg " + cls;
+            }
 
-function pick(id, el) {
-  if (over || marked.has(id)) return;
-  const called = CELLS[calls[step]];
-  const cell = CELLS[id];
-  if (id === called.id) {
-    marked.add(id); el.classList.add("on");
-    say(`${cell.src} returns ${fmt(cell.value)}. Nice.`, "good");
-    const win = LINES.find(l => l.every(i => marked.has(order[i])));
-    if (win) return finish(win);
-    step++; show();
-  } else {
-    strikes++; $("strikes").textContent = strikes;
-    el.classList.remove("shake"); void el.offsetWidth; el.classList.add("shake");
-    say(`${cell.src} returns ${fmt(cell.value)}, not ${fmt(called.value)}.`, "bad");
-  }
-}
+            function pick(id, el) {
+                if (over || marked.has(id)) return;
+                const called = CELLS[calls[step]];
+                const cell = CELLS[id];
+                if (id === called.id) {
+                    marked.add(id);
+                    el.classList.add("on");
+                    say(
+                        `${cell.src} returns ${fmt(cell.value)}. Nice.`,
+                        "good",
+                    );
+                    const win = LINES.find((l) =>
+                        l.every((i) => marked.has(order[i])),
+                    );
+                    if (win) return finish(win);
+                    step++;
+                    show();
+                } else {
+                    strikes++;
+                    $("strikes").textContent = strikes;
+                    el.classList.remove("shake");
+                    void el.offsetWidth;
+                    el.classList.add("shake");
+                    say(
+                        `${cell.src} returns ${fmt(cell.value)}, not ${fmt(called.value)}.`,
+                        "bad",
+                    );
+                }
+            }
 
-function finish(win) {
-  over = true;
-  document.querySelectorAll(".cell").forEach((b, i) => { if (win.includes(i)) b.classList.add("win"); });
-  $("ball").textContent = "BINGO";
-  $("left").textContent = calls.length - step - 1;
-  say(strikes === 0 && hints === 0 ? "Bingo with no misses. Clean run." : `Bingo with ${strikes} miss${strikes === 1 ? "" : "es"}${SHOW_HINT ? ` and ${hints} hint${hints === 1 ? "" : "s"}` : ""}. Play again to beat it.`, "good");
-  $("again").hidden = false;
-  $("hint").hidden = true;
-}
+            function finish(win) {
+                over = true;
+                document.querySelectorAll(".cell").forEach((b, i) => {
+                    if (win.includes(i)) b.classList.add("win");
+                });
+                $("ball").textContent = "BINGO";
+                $("left").textContent = calls.length - step - 1;
+                say(
+                    strikes === 0 && hints === 0
+                        ? "Bingo with no misses. Clean run."
+                        : `Bingo with ${strikes} miss${strikes === 1 ? "" : "es"}${SHOW_HINT ? ` and ${hints} hint${hints === 1 ? "" : "s"}` : ""}. Play again to beat it.`,
+                    "good",
+                );
+                $("again").hidden = false;
+                $("hint").hidden = true;
+            }
 
-$("hint").addEventListener("click", () => {
-  if (over) return;
-  if (hintedStep !== step) { hintedStep = step; hints++; $("hints").textContent = hints; }
-  $("board").children[order.indexOf(calls[step])].classList.add("hint");
-  say("The dashed square is the one to pick.", "");
-});
-if (!SHOW_HINT) { $("hint").hidden = true; $("hintStat").hidden = true; }
+            $("hint").addEventListener("click", () => {
+                if (over) return;
+                if (hintedStep !== step) {
+                    hintedStep = step;
+                    hints++;
+                    $("hints").textContent = hints;
+                }
+                $("board").children[order.indexOf(calls[step])].classList.add(
+                    "hint",
+                );
+                say("The dashed square is the one to pick.", "");
+            });
+            if (!SHOW_HINT) {
+                $("hint").hidden = true;
+                $("hintStat").hidden = true;
+            }
 
-$("again").addEventListener("click", start);
-load(1);
-</script>
-</body>
+            $("again").addEventListener("click", start);
+            load(1);
+        </script>
+    </body>
 </html>
