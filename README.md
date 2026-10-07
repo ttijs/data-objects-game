@@ -2,7 +2,7 @@
 
 A small browser game for practicing how to read JavaScript objects. Every square on a 4×4 bingo board is a JavaScript expression. A value is called, and you click the square whose expression returns it. Complete a row, column, or diagonal to win.
 
-Live version: https://claude.ai/artifact/U8uTbBE7KeteKLLj3krjn1
+Live version: https://ttijs.github.io/data-objects-game/index.html
 
 ## Running it
 
